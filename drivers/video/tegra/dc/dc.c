@@ -3160,6 +3160,33 @@ static int tegra_dc_probe(struct platform_device *ndev)
 	}
 	dc->mode_dirty = false; /* ignore changes tegra_dc_set_out has done */
 
+#ifdef CONFIG_FRAMEBUFFER_CONSOLE
+	if (dc->out && dc->out->n_modes &&
+	    (dc->out->type == TEGRA_DC_OUT_HDMI)) {
+		struct fb_monspecs specs;
+		struct tegra_dc_hdmi_data *hdmi = tegra_dc_get_outdata(dc);
+		if (!tegra_edid_get_monspecs(hdmi->edid, &specs)) {
+			struct tegra_dc_mode *dcmode = &dc->out->modes[0];
+			dcmode->pclk          = specs.modedb->pixclock;
+			dcmode->pclk          = PICOS2KHZ(dcmode->pclk);
+			dcmode->pclk         *= 1000;
+			dcmode->h_ref_to_sync = 1;
+			dcmode->v_ref_to_sync = 1;
+			dcmode->h_sync_width  = specs.modedb->hsync_len;
+			dcmode->v_sync_width  = specs.modedb->vsync_len;
+			dcmode->h_back_porch  = specs.modedb->left_margin;
+			dcmode->v_back_porch  = specs.modedb->upper_margin;
+			dcmode->h_active      = specs.modedb->xres;
+			dcmode->v_active      = specs.modedb->yres;
+			dcmode->h_front_porch = specs.modedb->right_margin;
+			dcmode->v_front_porch = specs.modedb->lower_margin;
+			tegra_dc_set_mode(dc, dcmode);
+			dc->pdata->fb->xres = dcmode->h_active;
+			dc->pdata->fb->yres = dcmode->v_active;
+		}
+	}
+#endif /* CONFIG_FRAMEBUFFER_CONSOLE */
+
 #ifndef CONFIG_TEGRA_ISOMGR
 		/*
 		 * The emc is a shared clock, it will be set based on
