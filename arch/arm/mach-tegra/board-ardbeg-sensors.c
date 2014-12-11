@@ -28,6 +28,8 @@
 #include <media/camera.h>
 #include <media/ar0261.h>
 #include <media/imx135.h>
+#include <media/imx179.h>
+#include <media/imx185.h>
 #include <media/dw9718.h>
 #include <media/as364x.h>
 #include <media/ov5693.h>
@@ -451,6 +453,216 @@ static int ardbeg_imx135_power_off(struct imx135_power_rail *pw)
 	return 0;
 }
 
+<<<<<<< HEAD
+=======
+static int ardbeg_ar1335_power_on(struct ar1335_power_rail *pw)
+{
+	int err;
+
+	if (unlikely(WARN_ON(!pw || !pw->iovdd || !pw->avdd)))
+		return -EFAULT;
+
+	/* disable CSIA/B IOs DPD mode to turn on camera for ardbeg */
+	tegra_io_dpd_disable(&csia_io);
+	tegra_io_dpd_disable(&csib_io);
+
+	gpio_set_value(CAM_RSTN, 0);
+	usleep_range(10, 20);
+
+	err = regulator_enable(pw->avdd);
+	if (err)
+		goto ar1335_avdd_fail;
+
+	err = regulator_enable(pw->iovdd);
+	if (err)
+		goto ar1335_iovdd_fail;
+
+	err = regulator_enable(pw->dvdd);
+	if (err)
+		goto ar1335_dvdd_fail;
+
+	usleep_range(1, 2);
+	gpio_set_value(CAM_RSTN, 1);
+
+	usleep_range(300, 310);
+
+	return 0;
+
+ar1335_dvdd_fail:
+	regulator_disable(pw->iovdd);
+
+ar1335_iovdd_fail:
+	regulator_disable(pw->avdd);
+
+ar1335_avdd_fail:
+	tegra_io_dpd_enable(&csia_io);
+	tegra_io_dpd_enable(&csib_io);
+	pr_err("%s failed.\n", __func__);
+	return -ENODEV;
+}
+
+static int ardbeg_ar1335_power_off(struct ar1335_power_rail *pw)
+{
+	if (unlikely(WARN_ON(!pw || !pw->iovdd || !pw->avdd))) {
+		tegra_io_dpd_enable(&csia_io);
+		tegra_io_dpd_enable(&csib_io);
+		return -EFAULT;
+	}
+
+	regulator_disable(pw->iovdd);
+	regulator_disable(pw->avdd);
+	regulator_disable(pw->dvdd);
+
+	/* put CSIA/B IOs into DPD mode to save additional power for ardbeg */
+	tegra_io_dpd_enable(&csia_io);
+	tegra_io_dpd_enable(&csib_io);
+	return 0;
+}
+
+static int ardbeg_imx179_power_on(struct imx179_power_rail *pw)
+{
+	int err;
+
+	if (unlikely(WARN_ON(!pw || !pw->iovdd || !pw->avdd)))
+		return -EFAULT;
+
+	/* disable CSIA/B IOs DPD mode to turn on camera for ardbeg */
+	tegra_io_dpd_disable(&csia_io);
+	tegra_io_dpd_disable(&csib_io);
+
+	gpio_set_value(CAM_AF_PWDN, 1);
+	gpio_set_value(CAM_RSTN, 0);
+	gpio_set_value(CAM1_PWDN, 0);
+	usleep_range(10, 20);
+
+	err = regulator_enable(pw->avdd);
+	if (err)
+		goto imx179_avdd_fail;
+
+	err = regulator_enable(pw->iovdd);
+	if (err)
+		goto imx179_iovdd_fail;
+
+	err = regulator_enable(pw->dvdd);
+	if (err)
+		goto imx179_dvdd_fail;
+
+	usleep_range(1, 2);
+	gpio_set_value(CAM_RSTN, 1);
+
+	usleep_range(300, 310);
+
+	return 1;
+
+
+imx179_dvdd_fail:
+	regulator_disable(pw->iovdd);
+
+imx179_iovdd_fail:
+	regulator_disable(pw->avdd);
+
+imx179_avdd_fail:
+	tegra_io_dpd_enable(&csia_io);
+	tegra_io_dpd_enable(&csib_io);
+	pr_err("%s failed.\n", __func__);
+	return -ENODEV;
+}
+
+static int ardbeg_imx179_power_off(struct imx179_power_rail *pw)
+{
+	if (unlikely(WARN_ON(!pw || !pw->iovdd || !pw->avdd))) {
+		tegra_io_dpd_enable(&csia_io);
+		tegra_io_dpd_enable(&csib_io);
+		return -EFAULT;
+	}
+
+	regulator_disable(pw->dvdd);
+	regulator_disable(pw->iovdd);
+	regulator_disable(pw->avdd);
+
+	/* put CSIA/B IOs into DPD mode to save additional power for ardbeg */
+	tegra_io_dpd_enable(&csia_io);
+	tegra_io_dpd_enable(&csib_io);
+	return 0;
+}
+
+struct ar1335_platform_data ardbeg_ar1335_data = {
+	.flash_cap = {
+		.enable = 1,
+		.edge_trig_en = 1,
+		.start_edge = 0,
+		.repeat = 1,
+		.delay_frm = 0,
+	},
+	.power_on = ardbeg_ar1335_power_on,
+	.power_off = ardbeg_ar1335_power_off,
+};
+static int ardbeg_imx185_power_on(struct imx185_power_rail *pw)
+{
+	int err;
+
+	if (unlikely(WARN_ON(!pw || !pw->iovdd || !pw->avdd)))
+		return -EFAULT;
+
+	/* disable CSIA/B IOs DPD mode to turn on camera for ardbeg */
+	tegra_io_dpd_disable(&csia_io);
+	tegra_io_dpd_disable(&csib_io);
+
+	gpio_set_value(CAM1_PWDN, 0);
+	usleep_range(10, 20);
+
+	err = regulator_enable(pw->dvdd);
+	if (err)
+		goto imx185_dvdd_fail;
+
+	err = regulator_enable(pw->iovdd);
+	if (err)
+		goto imx185_iovdd_fail;
+
+	err = regulator_enable(pw->avdd);
+	if (err)
+		goto imx185_avdd_fail;
+
+	usleep_range(1, 2);
+	gpio_set_value(CAM1_PWDN, 1);
+
+	usleep_range(300, 310);
+
+	return 0;
+
+
+imx185_avdd_fail:
+	regulator_disable(pw->iovdd);
+
+imx185_iovdd_fail:
+	regulator_disable(pw->dvdd);
+
+imx185_dvdd_fail:
+	tegra_io_dpd_enable(&csia_io);
+	tegra_io_dpd_enable(&csib_io);
+	pr_err("%s failed.\n", __func__);
+	return -ENODEV;
+}
+
+static int ardbeg_imx185_power_off(struct imx185_power_rail *pw)
+{
+	if (unlikely(WARN_ON(!pw || !pw->iovdd || !pw->avdd))) {
+		tegra_io_dpd_enable(&csia_io);
+		tegra_io_dpd_enable(&csib_io);
+		return -EFAULT;
+	}
+
+	regulator_disable(pw->avdd);
+	regulator_disable(pw->iovdd);
+	regulator_disable(pw->dvdd);
+
+	/* put CSIA/B IOs into DPD mode to save additional power for ardbeg */
+	tegra_io_dpd_enable(&csia_io);
+	tegra_io_dpd_enable(&csib_io);
+	return 0;
+}
+
+>>>>>>> 46f03f5... kernel: add imx185 sensor support
 struct imx135_platform_data ardbeg_imx135_data = {
 	.flash_cap = {
 		.enable = 1,
@@ -827,6 +1039,12 @@ static struct ov5693_platform_data ardbeg_ov5693_pdata = {
 	.has_eeprom = 1,
 };
 
+static struct imx185_platform_data ardbeg_imx185_data = {
+	.power_on	= ardbeg_imx185_power_on,
+	.power_off	= ardbeg_imx185_power_off,
+	.mclk_name	= "mclk",
+};
+
 static int ardbeg_ov5693_front_power_on(struct ov5693_power_rail *pw)
 {
 	int err;
@@ -975,6 +1193,7 @@ static struct ad5823_platform_data ardbeg_ad5823_pdata = {
 	.power_off	= ardbeg_ad5823_power_off,
 };
 
+<<<<<<< HEAD
 static struct i2c_board_info	ardbeg_i2c_board_info_imx135 = {
 	I2C_BOARD_INFO("imx135", 0x10),
 	.platform_data = &ardbeg_imx135_data,
@@ -1066,6 +1285,37 @@ static struct platform_device ardbeg_camera_generic = {
 	.name = "pcl-generic",
 	.id = -1,
 };
+=======
+static struct camera_data_blob ardbeg_camera_lut[] = {
+	{"ardbeg_imx135_pdata", &ardbeg_imx135_data},
+	{"ardbeg_imx185_pdata", &ardbeg_imx185_data},
+	{"ardbeg_dw9718_pdata", &ardbeg_dw9718_data},
+	{"ardbeg_ar0261_pdata", &ardbeg_ar0261_data},
+	{"ardbeg_mt9m114_pdata", &ardbeg_mt9m114_pdata},
+	{"ardbeg_ov5693_pdata", &ardbeg_ov5693_pdata},
+	{"ardbeg_ad5823_pdata", &ardbeg_ad5823_pdata},
+	{"ardbeg_as3648_pdata", &ardbeg_as3648_data},
+	{"ardbeg_ov7695_pdata", &ardbeg_ov7695_pdata},
+	{"ardbeg_ov5693f_pdata", &ardbeg_ov5693_front_pdata},
+	{"ardbeg_ar0330_pdata", &ardbeg_ar0330_data},
+	{"ardbeg_ar0330_front_pdata", &ardbeg_ar0330_front_data},
+	{"ardbeg_ov4689_pdata", &ardbeg_ov4689_data},
+	{"ardbeg_ar1335_pdata", &ardbeg_ar1335_data},
+	{},
+};
+
+void __init ardbeg_camera_auxdata(void *data)
+{
+	struct of_dev_auxdata *aux_lut = data;
+	while (aux_lut && aux_lut->compatible) {
+		if (!strcmp(aux_lut->compatible, "nvidia,tegra124-camera")) {
+			pr_info("%s: update camera lookup table.\n", __func__);
+			aux_lut->platform_data = ardbeg_camera_lut;
+		}
+		aux_lut++;
+	}
+}
+>>>>>>> 46f03f5... kernel: add imx185 sensor support
 
 static int ardbeg_camera_init(void)
 {
