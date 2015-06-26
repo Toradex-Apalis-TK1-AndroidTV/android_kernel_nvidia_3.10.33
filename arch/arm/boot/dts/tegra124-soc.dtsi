@@ -558,13 +558,7 @@
 			0x0 0x70021000 0x0 0x00001000>;
 		interrupts = <0 23 0x04>;
 		status = "disabled";
-	};
 
-	psci {
-		compatible = "arm,psci";
-		method = "smc";
-		cpu_suspend = <0x84000001>;
-		cpu_on = <0x84000003>;
 	};
 
 	udc: udc@7d000000 {
