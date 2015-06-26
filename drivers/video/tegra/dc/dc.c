@@ -2672,7 +2672,6 @@ static void _tegra_dc_controller_disable(struct tegra_dc *dc)
 	if (atomic_read(&dc->holding)) {
 		/* Force release all refs but the last one */
 		atomic_set(&dc->holding, 1);
-		tegra_dc_release_dc_out(dc);
 	}
 
 	if (dc->out && dc->out->prepoweroff)
