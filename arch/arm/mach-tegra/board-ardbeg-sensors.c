@@ -1687,6 +1687,7 @@ static int ardbeg_nct72_init(void)
 
 	/* vmin trips are bound to soctherm on norrin and bowmore */
 	if (!(board_info.board_id == BOARD_PM374 ||
+		board_info.board_id == BOARD_PM375 ||
 		board_info.board_id == BOARD_E1971 ||
 		board_info.board_id == BOARD_E1991))
 		tegra_add_all_vmin_trips(ardbeg_nct72_pdata.sensors[EXT].trips,
@@ -1721,6 +1722,12 @@ static int ardbeg_nct72_init(void)
 		/* bowmore has thermal sensor on GEN1-I2C i.e. instance 0 */
 		i2c_register_board_info(0, ardbeg_i2c_nct72_board_info,
 					1); /* only register device[0] */
+	else if (board_info.board_id == BOARD_PM375) {
+		ardbeg_nct72_pdata.sensors[EXT].shutdown_limit = 105;
+		ardbeg_nct72_pdata.sensors[LOC].shutdown_limit = 100;
+		i2c_register_board_info(0, ardbeg_i2c_nct72_board_info,
+					1); /* only register device[0] */
+	}
 	else
 		i2c_register_board_info(1, ardbeg_i2c_nct72_board_info,
 			ARRAY_SIZE(ardbeg_i2c_nct72_board_info));
@@ -1893,6 +1900,7 @@ int __init ardbeg_sensors_init(void)
 	/* TN8 sensors use Device Tree */
 	if (board_info.board_id != BOARD_PM363 &&
 		board_info.board_id != BOARD_PM359 &&
+		board_info.board_id != BOARD_PM375 &&
 		!of_machine_is_compatible("nvidia,tn8"))
 		mpuirq_init();
 	ardbeg_camera_init();
@@ -1910,6 +1918,7 @@ int __init ardbeg_sensors_init(void)
 #if defined(ARCH_TEGRA_12x_SOC)
 	/* TN8 and PM359 don't have ALS CM32181 */
 	if (!of_machine_is_compatible("nvidia,tn8") &&
+	    board_info.board_id != BOARD_PM375 &&
 	    board_info.board_id != BOARD_PM359)
 		i2c_register_board_info(0, ardbeg_i2c_board_info_cm32181,
 			ARRAY_SIZE(ardbeg_i2c_board_info_cm32181));

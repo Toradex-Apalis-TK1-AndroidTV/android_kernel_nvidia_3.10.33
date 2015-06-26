@@ -170,6 +170,8 @@ static __initdata struct tegra_clk_init_table ardbeg_clk_init_table[] = {
 	{ "hda",	"pll_p",	108000000,	false},
 	{ "hda2codec_2x", "pll_p",	48000000,	false},
 	{ "pwm",	"pll_p",	48000000,	false},
+	{ "pll_a",	"pll_p_out1",	282240000,	false},
+	{ "pll_a_out0",	"pll_a",	12288000,	false},
 	{ "i2s1",	"pll_a_out0",	0,		false},
 	{ "i2s3",	"pll_a_out0",	0,		false},
 	{ "i2s4",	"pll_a_out0",	0,		false},
@@ -358,10 +360,11 @@ static void ardbeg_audio_init(void)
 			board_info.board_id == BOARD_PM358 ||
 			board_info.board_id == BOARD_PM370 ||
 			board_info.board_id == BOARD_PM374 ||
+			board_info.board_id == BOARD_PM375 ||
 			board_info.board_id == BOARD_PM363) {
 		/*Laguna*/
 		ardbeg_audio_pdata_rt5639.gpio_hp_det = TEGRA_GPIO_HP_DET;
-		ardbeg_audio_pdata_rt5639.gpio_hp_det_active_high = 1;
+		ardbeg_audio_pdata_rt5639.gpio_hp_det_active_high = 0;
 		if (board_info.board_id != BOARD_PM363)
 			ardbeg_audio_pdata_rt5639.gpio_ldo1_en = -1;
 	} else {
@@ -658,11 +661,20 @@ static void ardbeg_usb_init(void)
 			board_info.board_id == BOARD_PM358 ||
 			board_info.board_id == BOARD_PM370 ||
 			board_info.board_id == BOARD_PM374 ||
+			board_info.board_id == BOARD_PM375 ||
 			board_info.board_id == BOARD_PM363) {
 		/* Laguna */
 		/* Host cable is detected through AMS PMU Interrupt */
-		tegra_udc_pdata.id_det_type = TEGRA_USB_PMU_ID;
-		tegra_ehci1_utmi_pdata.id_det_type = TEGRA_USB_PMU_ID;
+		if (board_info.major_revision >= 'A' &&
+			board_info.major_revision <= 'D' &&
+			board_info.board_id == BOARD_PM375) {
+			tegra_udc_pdata.id_det_type = TEGRA_USB_VIRTUAL_ID;
+			tegra_ehci1_utmi_pdata.id_det_type =
+						TEGRA_USB_VIRTUAL_ID;
+		} else {
+			tegra_udc_pdata.id_det_type = TEGRA_USB_PMU_ID;
+			tegra_ehci1_utmi_pdata.id_det_type = TEGRA_USB_PMU_ID;
+		}
 		tegra_ehci1_utmi_pdata.id_extcon_dev_name = "as3722-extcon";
 	} else {
 		/* Ardbeg and TN8 */
@@ -798,6 +810,13 @@ static void ardbeg_xusb_init(void)
 				TEGRA_XUSB_SS_P1 | TEGRA_XUSB_USB2_P2);
 
 		/* FIXME Add for UTMIP2 when have odmdata assigend */
+	} else if (board_info.board_id == BOARD_PM375) {
+		if (!(usb_port_owner_info & UTMI1_PORT_OWNER_XUSB))
+			xusb_pdata.portmap &= ~(TEGRA_XUSB_USB2_P0);
+		if (!(usb_port_owner_info & UTMI2_PORT_OWNER_XUSB))
+			xusb_pdata.portmap &= ~(TEGRA_XUSB_USB2_P2 |
+					TEGRA_XUSB_USB2_P1 | TEGRA_XUSB_SS_P0);
+		xusb_pdata.portmap &= ~(TEGRA_XUSB_SS_P1);
 	} else {
 		/* Ardbeg */
 		if (board_info.board_id == BOARD_E1781) {
@@ -1155,6 +1174,7 @@ static void __init ardbeg_sysedp_init(void)
 		break;
 	case BOARD_PM358:
 	case BOARD_PM359:
+	case BOARD_PM375:
 	default:
 		break;
 	}
@@ -1180,6 +1200,7 @@ static void __init ardbeg_sysedp_dynamic_capping_init(void)
 		break;
 	case BOARD_PM358:
 	case BOARD_PM359:
+	case BOARD_PM375:
 	default:
 		break;
 	}
@@ -1201,6 +1222,7 @@ static void __init ardbeg_sysedp_batmon_init(void)
 		break;
 	case BOARD_PM358:
 	case BOARD_PM359:
+	case BOARD_PM375:
 	default:
 		break;
 	}
@@ -1232,6 +1254,7 @@ static void __init edp_init(void)
 	case BOARD_E2548:
 			loki_edp_init();
 			break;
+	case BOARD_PM375:
 	default:
 			ardbeg_edp_init();
 			break;
@@ -1243,7 +1266,9 @@ static void __init tegra_ardbeg_early_init(void)
 	ardbeg_sysedp_init();
 	tegra_clk_init_from_table(ardbeg_clk_init_table);
 	tegra_clk_verify_parents();
-	if (of_machine_is_compatible("nvidia,laguna"))
+	if (of_machine_is_compatible("nvidia,jetson-tk1"))
+		tegra_soc_device_init("jetson-tk1");
+	else if (of_machine_is_compatible("nvidia,laguna"))
 		tegra_soc_device_init("laguna");
 	else if (of_machine_is_compatible("nvidia,tn8"))
 		tegra_soc_device_init("tn8");
@@ -1331,6 +1356,7 @@ static void __init tegra_ardbeg_late_init(void)
 	if (board_info.board_id == BOARD_PM359 ||
 			board_info.board_id == BOARD_PM358 ||
 			board_info.board_id == BOARD_PM370 ||
+			board_info.board_id == BOARD_PM375 ||
 			board_info.board_id == BOARD_PM363)
 		laguna_regulator_init();
 	else if (board_info.board_id == BOARD_PM374)
@@ -1372,6 +1398,7 @@ static void __init tegra_ardbeg_late_init(void)
 		board_info.board_id == BOARD_PM359 ||
 		board_info.board_id == BOARD_PM358 ||
 		board_info.board_id == BOARD_PM370 ||
+		board_info.board_id == BOARD_PM375 ||
 		board_info.board_id == BOARD_PM363) {
 		ardbeg_sensors_init();
 		norrin_soctherm_init();
@@ -1463,6 +1490,11 @@ static const char * const bowmore_dt_board_compat[] = {
 
 static const char * const loki_dt_board_compat[] = {
 	"nvidia,loki",
+	NULL
+};
+
+static const char * const jetson_dt_board_compat[] = {
+	"nvidia,jetson-tk1",
 	NULL
 };
 
@@ -1565,4 +1597,18 @@ DT_MACHINE_START(ARDBEG_SATA, "ardbeg_sata")
 	.dt_compat	= ardbeg_sata_dt_board_compat,
 	.init_late      = tegra_init_late
 
+MACHINE_END
+
+DT_MACHINE_START(JETSON_TK1, "jetson-tk1")
+	.atag_offset	= 0x100,
+	.smp		= smp_ops(tegra_smp_ops),
+	.map_io		= tegra_map_common_io,
+	.reserve	= tegra_ardbeg_reserve,
+	.init_early	= tegra_ardbeg_init_early,
+	.init_irq	= irqchip_init,
+	.init_time	= clocksource_of_init,
+	.init_machine	= tegra_ardbeg_dt_init,
+	.restart	= tegra_assert_system_reset,
+	.dt_compat	= jetson_dt_board_compat,
+	.init_late      = tegra_init_late
 MACHINE_END

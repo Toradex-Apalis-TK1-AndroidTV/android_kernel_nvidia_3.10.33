@@ -425,7 +425,8 @@ static int __init ardbeg_wifi_prepower(void)
 		!of_machine_is_compatible("nvidia,ardbeg_sata") &&
 		!of_machine_is_compatible("nvidia,tn8") &&
 		!of_machine_is_compatible("nvidia,norrin") &&
-		!of_machine_is_compatible("nvidia,bowmore"))
+		!of_machine_is_compatible("nvidia,bowmore") &&
+		!of_machine_is_compatible("nvidia,jetson-tk1"))
 		return 0;
 	ardbeg_wifi_power(1);
 
@@ -467,7 +468,8 @@ int __init ardbeg_sdhci_init(void)
 		tegra_sdhci_platform_data3.boot_vcore_mv = boot_vcore_mv;
 	}
 
-	if (of_machine_is_compatible("nvidia,laguna"))
+	if (of_machine_is_compatible("nvidia,laguna") ||
+	    of_machine_is_compatible("nvidia,jetson-tk1"))
 		tegra_sdhci_platform_data2.wp_gpio = ARDBEG_SD_WP;
 
 	tegra_get_board_info(&board_info);
@@ -494,6 +496,14 @@ int __init ardbeg_sdhci_init(void)
 		board_info.board_id == BOARD_PM359)
 			tegra_sdhci_platform_data0.disable_clock_gate = 1;
 
+	/*
+	 * FIXME: Set max clk limit to 200MHz for SDMMC3 for PM375.
+	 * Requesting 208MHz results in getting 204MHz from PLL_P
+	 * and CRC errors are seen with same.
+	 */
+	if (board_info.board_id == BOARD_PM375)
+		tegra_sdhci_platform_data2.max_clk_limit = 200000000;
+
 	speedo = tegra_fuse_readl(FUSE_SOC_SPEEDO_0);
 	tegra_sdhci_platform_data0.cpu_speedo = speedo;
 	tegra_sdhci_platform_data2.cpu_speedo = speedo;
@@ -519,8 +529,13 @@ int __init ardbeg_sdhci_init(void)
 	platform_device_register(&tegra_sdhci_device3);
 	if (!is_uart_over_sd_enabled())
 		platform_device_register(&tegra_sdhci_device2);
-	platform_device_register(&tegra_sdhci_device0);
-	ardbeg_wifi_init();
+
+	/* No wifi module for PM375 */
+	if (board_info.board_id != BOARD_PM359 &&
+			board_info.board_id != BOARD_PM375) {
+		platform_device_register(&tegra_sdhci_device0);
+		ardbeg_wifi_init();
+	}
 
 	return 0;
 }
