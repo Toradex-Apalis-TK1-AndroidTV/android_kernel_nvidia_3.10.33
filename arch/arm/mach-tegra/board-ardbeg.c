@@ -557,7 +557,7 @@ static struct tegra_usb_platform_data tegra_ehci2_utmi_pdata = {
 		.hot_plug = false,
 		.remote_wakeup_supported = true,
 		.power_off_on_suspend = true,
-		.skip_resume = true,
+		.skip_resume = false,
 	},
 	.u_cfg.utmi = {
 		.hssync_start_delay = 0,
@@ -584,7 +584,7 @@ static struct tegra_usb_platform_data tegra_ehci3_utmi_pdata = {
 		.hot_plug = false,
 		.remote_wakeup_supported = true,
 		.power_off_on_suspend = true,
-		.skip_resume = true,
+		.skip_resume = false,
 	},
 	.u_cfg.utmi = {
 	.hssync_start_delay = 0,
@@ -617,7 +617,7 @@ static struct tegra_usb_platform_data tegra_ehci2_hsic_baseband_pdata = {
 		.hot_plug = false,
 		.remote_wakeup_supported = true,
 		.power_off_on_suspend = true,
-		.skip_resume = true,
+		.skip_resume = false,
 	},
 };
 
@@ -632,7 +632,7 @@ static struct tegra_usb_platform_data tegra_ehci2_hsic_smsc_hub_pdata = {
 		.hot_plug = false,
 		.remote_wakeup_supported = true,
 		.power_off_on_suspend = true,
-		.skip_resume = true,
+		.skip_resume = false,
 	},
 };
 
