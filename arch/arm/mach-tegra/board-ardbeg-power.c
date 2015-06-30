@@ -1224,16 +1224,27 @@ int __init ardbeg_suspend_init(void)
 int __init ardbeg_edp_init(void)
 {
 	unsigned int regulator_mA;
+	struct board_info board_info;
+
+	tegra_get_board_info(&board_info);
 
 	regulator_mA = get_maximum_cpu_current_supported();
-	if (!regulator_mA)
-		regulator_mA = 14000;
+	if (!regulator_mA) {
+		if (board_info.board_id == BOARD_PM375)
+			regulator_mA = 11000;
+		else
+			regulator_mA = 14000;
+	}
 
 	pr_info("%s: CPU regulator %d mA\n", __func__, regulator_mA);
 	tegra_init_cpu_edp_limits(regulator_mA);
 
 	/* gpu maximum current */
-	regulator_mA = 12000;
+	if (board_info.board_id == BOARD_PM375)
+		regulator_mA = 10500;
+	else
+		regulator_mA = 12000;
+
 	pr_info("%s: GPU regulator %d mA\n", __func__, regulator_mA);
 
 	tegra_init_gpu_edp_limits(regulator_mA);
