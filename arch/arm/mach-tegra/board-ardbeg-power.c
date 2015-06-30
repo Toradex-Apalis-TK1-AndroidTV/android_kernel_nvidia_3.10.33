@@ -1241,7 +1241,7 @@ int __init ardbeg_edp_init(void)
 
 	/* gpu maximum current */
 	if (board_info.board_id == BOARD_PM375)
-		regulator_mA = 10500;
+		regulator_mA = 11400;
 	else
 		regulator_mA = 12000;
 
