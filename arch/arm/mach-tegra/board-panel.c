@@ -181,10 +181,11 @@ static void tegra_panel_register_ops(struct tegra_dc_out *dc_out,
 struct device_node *tegra_panel_get_dt_node(
 			struct tegra_dc_platform_data *pdata)
 {
-	struct tegra_dc_out *dc_out = pdata->default_out;
+	struct tegra_dc_out *dc_out = NULL;
 	struct device_node *np_panel = NULL;
 	struct board_info display_board;
 
+	tegra_get_display_board_info(&display_board);
 	if (display_board.board_id == 0)
 		tegra_get_board_info(&display_board);
 
