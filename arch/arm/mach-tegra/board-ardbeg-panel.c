@@ -445,7 +445,7 @@ struct tegra_hdmi_out ardbeg_hdmi_out = {
 #if defined(CONFIG_FRAMEBUFFER_CONSOLE)
 static struct tegra_dc_mode hdmi_panel_modes[] = {
 	{
-		.pclk =			KHZ2PICOS(25200),
+		.pclk =			25200000,
 		.h_ref_to_sync =	1,
 		.v_ref_to_sync =	1,
 		.h_sync_width =		96,	/* hsync_len */
@@ -479,7 +479,11 @@ static struct tegra_dc_mode hdmi_panel_modes[] = {
 static struct tegra_dc_out ardbeg_disp2_out = {
 	.type		= TEGRA_DC_OUT_HDMI,
 	.flags		= TEGRA_DC_OUT_HOTPLUG_HIGH,
+#ifndef CONFIG_TEGRA_HDMI_PRIMARY
 	.parent_clk	= "pll_d2",
+#else
+	.parent_clk	= "pll_d",
+#endif /* CONFIG_TEGRA_HDMI_PRIMARY */
 
 	.ddc_bus	= 3,
 	.hotplug_gpio	= ardbeg_hdmi_hpd,
@@ -534,9 +538,6 @@ static struct tegra_dc_platform_data ardbeg_disp2_pdata = {
 	.default_out	= &ardbeg_disp2_out,
 	.fb		= &ardbeg_disp2_fb_data,
 	.emc_clk_rate	= 300000000,
-#ifdef CONFIG_TEGRA_DC_CMU
-	.cmu_enable	= 1,
-#endif
 };
 
 static struct platform_device ardbeg_disp2_device = {
@@ -709,11 +710,6 @@ static struct tegra_panel *ardbeg_panel_configure(struct board_info *board_out,
 	case BOARD_PM354:
 		panel = &dsi_a_1080p_14_0;
 		break;
-	case BOARD_E1627:
-		panel = &dsi_p_wuxga_10_1;
-		tegra_io_dpd_enable(&dsic_io);
-		tegra_io_dpd_enable(&dsid_io);
-		break;
 	case BOARD_E1549:
 		panel = &dsi_lgd_wxga_7_0;
 		break;
@@ -807,16 +803,8 @@ static void ardbeg_panel_select(void)
 
 			tegra_get_board_info(&mainboard);
 			if ((mainboard.board_id == BOARD_E1784) ||
-				(mainboard.board_id == BOARD_P1761)) {
-
+				(mainboard.board_id == BOARD_P1761))
 				ardbeg_disp1_out.rotation = 180;
-
-				if ((board.board_id == BOARD_E1937) &&
-					(board.sku == 1000))
-					ardbeg_disp1_out.dsi->
-						dsi_panel_rst_gpio =
-						TEGRA_GPIO_PN4;
-			}
 		}
 
 		if (panel->init_fb_data)
@@ -978,6 +966,7 @@ int __init ardbeg_panel_init(void)
 			ardbeg_hdmi_out.tmds_config = ardbeg_tn8_tmds_config;
 		break;
 	case BOARD_PM375:
+	case BOARD_PM377:
 		ardbeg_tmds_config[1].pe_current = 0x08080808;
 		ardbeg_tmds_config[1].drive_current = 0x2d2d2d2d;
 		ardbeg_tmds_config[1].peak_current = 0x0;

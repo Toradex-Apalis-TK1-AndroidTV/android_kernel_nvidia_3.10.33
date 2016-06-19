@@ -186,25 +186,29 @@ struct device_node *tegra_panel_get_dt_node(
 	struct board_info display_board;
 
 	tegra_get_display_board_info(&display_board);
-	if (display_board.board_id == 0)
-		tegra_get_board_info(&display_board);
 
 	if (pdata)
-
 		dc_out = pdata->default_out;
 
 	switch (display_board.board_id) {
 	case BOARD_E1627:
-		tegra_panel_register_ops(dc_out, &dsi_p_wuxga_10_1_ops);
+	case BOARD_E1797:
+		if (pdata && dc_out)
+			tegra_panel_register_ops(dc_out,
+				&dsi_p_wuxga_10_1_ops);
 		np_panel = of_find_compatible_node(NULL, NULL, "p,wuxga-10-1");
 		break;
 	case BOARD_E1549:
-		tegra_panel_register_ops(dc_out, &dsi_lgd_wxga_7_0_ops);
+		if (pdata && dc_out)
+			tegra_panel_register_ops(dc_out,
+				&dsi_lgd_wxga_7_0_ops);
 		np_panel = of_find_compatible_node(NULL, NULL, "lg,wxga-7");
 		break;
 	case BOARD_E1639:
 	case BOARD_E1813:
-		tegra_panel_register_ops(dc_out, &dsi_s_wqxga_10_1_ops);
+		if (pdata && dc_out)
+			tegra_panel_register_ops(dc_out,
+				&dsi_s_wqxga_10_1_ops);
 		np_panel = of_find_compatible_node(NULL, NULL, "s,wqxga-10-1");
 		break;
 #ifndef CONFIG_TEGRA_HDMI_PRIMARY
