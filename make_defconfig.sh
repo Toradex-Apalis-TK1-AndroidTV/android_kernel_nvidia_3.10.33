@@ -3,7 +3,7 @@
 DEFCONFIG_FILE=$1
 
 if [ -z "$DEFCONFIG_FILE" ]; then
-	echo "Need defconfig file(tegra12_android_hdmi-primary_defconfig)!"
+	echo "Need defconfig file(tegra12_android_defconfig)!"
 	exit -1
 fi
 
@@ -24,4 +24,4 @@ make savedefconfig ARCH=arm
 # copy .config to defconfig
 mv defconfig arch/arm/configs/${DEFCONFIG_FILE}
 # clean kernel object
-make mrproper
+#make mrproper
