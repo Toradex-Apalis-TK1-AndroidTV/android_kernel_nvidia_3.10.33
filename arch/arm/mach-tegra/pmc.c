@@ -35,6 +35,14 @@
 #define PMC_REMOVE_CLAMPING		0x34
 #define PMC_PWRGATE_STATUS		0x38
 
+#define PMC_SCRATCH0			0x50
+#define PMC_SCRATCH0_MODE_RECOVERY	(1 << 31)
+#define PMC_SCRATCH0_MODE_BOOTLOADER	(1 << 30)
+#define PMC_SCRATCH0_MODE_RCM		(1 << 1)
+#define PMC_SCRATCH0_MODE_MASK		(PMC_SCRATCH0_MODE_RECOVERY | \
+					 PMC_SCRATCH0_MODE_BOOTLOADER | \
+					 PMC_SCRATCH0_MODE_RCM)
+
 #define PMC_CPUPWRGOOD_TIMER	0xc8
 #define PMC_CPUPWROFF_TIMER	0xcc
 
@@ -325,6 +333,22 @@ static void tegra_pmc_parse_dt(void)
 static int __init tegra_pmc_init(void)
 {
 	u32 val;
+
+	val = tegra_pmc_readl(PMC_SCRATCH0);
+	val &= ~PMC_SCRATCH0_MODE_MASK;
+
+	if (cmd) {
+		if (strcmp(cmd, "recovery") == 0)
+			val |= PMC_SCRATCH0_MODE_RECOVERY;
+
+		if (strcmp(cmd, "bootloader") == 0)
+			val |= PMC_SCRATCH0_MODE_BOOTLOADER;
+
+		if (strcmp(cmd, "forced-recovery") == 0)
+			val |= PMC_SCRATCH0_MODE_RCM;
+	}
+
+	tegra_pmc_writel(val, PMC_SCRATCH0);
 
 	tegra_pmc_parse_dt();
 
