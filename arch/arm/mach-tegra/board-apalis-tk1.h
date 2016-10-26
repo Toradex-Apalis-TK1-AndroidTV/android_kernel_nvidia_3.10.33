@@ -53,6 +53,10 @@ void apalis_tk1_camera_auxdata(void *);
 #define MPU_BMP_NAME			"bmp280"
 #define MPU_BMP_ADDR			0x77
 
+//#define APALIS_TK1_EDP
+
+/* GPIO */
+
 /* generated soc_therm OC interrupts */
 #define TEGRA_SOC_OC_IRQ_BASE	TEGRA_NR_IRQS
 #define TEGRA_SOC_OC_NUM_IRQ	TEGRA_SOC_OC_IRQ_MAX
