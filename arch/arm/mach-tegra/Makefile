@@ -186,7 +186,6 @@ obj-y                                   += panel-p-wuxga-10-1.o
 obj-y                                   += panel-lgd-wxga-7-0.o
 obj-y                                   += panel-s-wqxga-10-1.o
 
-<<<<<<< HEAD
 obj-${CONFIG_MACH_DALMORE}              += board-dalmore.o
 obj-${CONFIG_MACH_DALMORE}              += board-dalmore-memory.o
 obj-${CONFIG_MACH_DALMORE}              += board-dalmore-power.o
