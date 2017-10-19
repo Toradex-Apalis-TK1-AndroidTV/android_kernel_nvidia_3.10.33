@@ -983,19 +983,6 @@ static int tegra_pcie_enable_controller(void)
 
 	PR_FUNC_LINE;
 
-#ifdef CONFIG_MACH_APALIS_TK1
-	/* Reset PLX PEX 8605 PCIe Switch plus PCIe devices on Apalis Evaluation
-	   Board */
-	if (g_pex_perst) gpio_request(PEX_PERST_N, "PEX_PERST_N");
-	gpio_request(RESET_MOCI_N, "RESET_MOCI_N");
-	if (g_pex_perst) gpio_direction_output(PEX_PERST_N, 0);
-	gpio_direction_output(RESET_MOCI_N, 0);
-
-	/* Reset I210 Gigabit Ethernet Controller */
-	gpio_request(LAN_RESET_N, "LAN_RESET_N");
-	gpio_direction_output(LAN_RESET_N, 0);
-#endif /* CONFIG_MACH_APALIS_TK1 */
-
 	/* Enable slot clock and ensure reset signal is assert */
 	for (i = 0; i < ARRAY_SIZE(pex_controller_registers); i++) {
 		reg = pex_controller_registers[i];
@@ -1077,18 +1064,6 @@ static int tegra_pcie_enable_controller(void)
 		val |= AFI_PEX_CTRL_RST;
 		afi_writel(val, pex_controller_registers[i]);
 	}
-
-#ifdef CONFIG_MACH_APALIS_TK1
-	/* Must be asserted for 100 ms after power and clocks are stable */
-	if (g_pex_perst) gpio_set_value(PEX_PERST_N, 1);
-	/* Err_5: PEX_REFCLK_OUTpx/nx Clock Outputs is not Guaranteed Until
-	   900 us After PEX_PERST# De-assertion */
-	if (g_pex_perst) mdelay(1);
-	gpio_set_value(RESET_MOCI_N, 1);
-
-	/* Release I210 Gigabit Ethernet Controller Reset */
-	gpio_set_value(LAN_RESET_N, 1);
-#endif /* CONFIG_MACH_APALIS_TK1 */
 
 	return ret;
 }

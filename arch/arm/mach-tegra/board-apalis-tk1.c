@@ -590,6 +590,7 @@ static void __init tegra_apalis_tk1_dt_init(void)
 	of_platform_populate(NULL,
 			     of_default_bus_match_table,
 			     apalis_tk1_auxdata_lookup, &platform_bus);
+#endif
 
 	tegra_apalis_tk1_late_init();
 }
